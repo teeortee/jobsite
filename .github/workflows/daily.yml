@@ -35,3 +35,5 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with: { path: site }
       - uses: actions/deploy-pages@v4
+      - name: Notify search engines (IndexNow)
+        run: python scripts/indexnow.py
