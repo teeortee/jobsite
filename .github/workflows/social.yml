@@ -1,0 +1,46 @@
+name: Daily LinkedIn job posts
+on:
+  schedule:
+    - cron: "23 7 * * *"    # Europe post, published ~08:30 London (07:30 UTC)
+    - cron: "53 12 * * *"   # Americas post, published ~08:30 New York (winter) / 09:30 (summer)
+  workflow_dispatch:
+    inputs:
+      group:
+        description: "americas or europe"
+        required: true
+        default: americas
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency: { group: pages, cancel-in-progress: false }
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pillow
+      - name: Make post
+        env:
+          SIGNUP_URL: ${{ vars.SIGNUP_URL }}
+        run: |
+          G="${{ inputs.group }}"
+          if [ -z "$G" ]; then if [ "$(date -u +%H)" -lt 11 ]; then G=europe; else G=americas; fi; fi
+          python scripts/social_post.py "$G"
+      - name: Build site
+        env:
+          SIGNUP_URL: ${{ vars.SIGNUP_URL }}
+        run: python scripts/build_site.py
+      - name: Save post
+        run: |
+          git config user.name "teeortee-bot"
+          git config user.email "social@teeortee.com"
+          git add -A site/social
+          git commit -m "LinkedIn post $(date -u +%F-%H)" || echo "no changes"
+          git pull --rebase && git push
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site }
+      - uses: actions/deploy-pages@v4
