@@ -147,7 +147,11 @@ def job_page(j, similar):
     schema = [crumbs_ld(trail + [(j["title"], f"/job/{j['id']}/")])]
     if indexable:
         schema.append(job_schema(j, dhtml))
-    page(f"/job/{j['id']}/", f"{title[:70]} | TeeOrTee Jobs", meta[:160], body, noindex=not indexable,
+    if len(title) > 70:
+        title = f"{j['title']} – {j['company']}"
+    if len(title) > 70:
+        title = title[:68].rsplit(" ", 1)[0] + "…"
+    page(f"/job/{j['id']}/", f"{title} | TeeOrTee Jobs", meta[:160], body, noindex=not indexable,
          schema=schema, lastmod=j.get("last_seen"), ogtype="article")
 
 
