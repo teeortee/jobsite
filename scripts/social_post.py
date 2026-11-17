@@ -127,6 +127,28 @@ def feed(key, g):
         f"<description>Daily project jobs post for {html.escape(g['name'])}</description>{''.join(items)}</channel></rss>")
 
 
+def pinterest_feed():
+    """One feed with both regions for Pinterest auto-publish (title <= 100, description <= 500 chars)."""
+    items = []
+    for f in sorted(glob.glob(os.path.join(OUT, "20*.json")), reverse=True)[:20]:
+        p = json.load(open(f))
+        g = GROUPS[p["id"].split("-", 3)[3]]
+        jobs = p.get("jobs") or []
+        sample = "; ".join(jobs[:3])
+        desc = (f"{p.get('count', len(jobs))} new project manager, programme, PMO and scrum master jobs in {g['name']} today"
+                + (f", including {sample}" if sample else "") + ". See all jobs and apply on the original listings at jobs.teeortee.com. "
+                "Funny t-shirts for project professionals at teeortee.com. #projectmanagement #jobs #projectmanager")[:500]
+        link = f"{p['link']}?utm_source=pinterest&utm_medium=social&utm_campaign=daily-jobs"
+        items.append(
+            f"<item><title>{html.escape(p['title'][:100])}</title><link>{html.escape(link)}</link><guid isPermaLink=\"false\">pin-{p['id']}</guid>"
+            f"<pubDate>{p['pubDate']}</pubDate><description>{html.escape(desc)}</description>"
+            f"<enclosure url=\"{p['image']}\" type=\"image/png\" length=\"{p['bytes']}\"/></item>")
+    open(os.path.join(OUT, "pinterest.xml"), "w").write(
+        '<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>'
+        f"<title>TeeOrTee Jobs – daily project jobs</title><link>{SITE}</link>"
+        f"<description>Daily project manager jobs for USA, UK, Europe, Canada and Australia</description>{''.join(items)}</channel></rss>")
+
+
 def prune(days=14):
     cut = (TODAY - datetime.timedelta(days=days)).isoformat()
     for f in glob.glob(os.path.join(OUT, "20*")):
@@ -151,10 +173,12 @@ def main():
     image(g, jobs, tee, png)
     json.dump(dict(id=stem, title=f"Project jobs today: {g['name']} ({TODAY.strftime('%d %b')})", text=text,
                    link=SITE + g["hub"], image=f"{SITE}/social/{stem}.png", bytes=os.path.getsize(png),
-                   pubDate=format_datetime(NOW), tee=tee, tee_url=f"{SHOP}/products/{TEES[tee][1]}?utm_source=linkedin&utm_medium=social&utm_campaign=daily-jobs"),
+                   pubDate=format_datetime(NOW), tee=tee, count=len(jobs),
+                   jobs=[f"{j['title']} at {j['company']}" for j in jobs[:3]], tee_url=f"{SHOP}/products/{TEES[tee][1]}?utm_source=linkedin&utm_medium=social&utm_campaign=daily-jobs"),
               open(os.path.join(OUT, stem + ".json"), "w"), ensure_ascii=False, indent=1)
     prune()
     feed(key, g)
+    pinterest_feed()
     print("post", stem, len(jobs), "jobs,", len(text), "chars")
 
 
