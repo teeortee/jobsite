@@ -14,7 +14,8 @@ DB = json.load(open(os.path.join(ROOT, "data", "jobs.json")))
 KEY = os.environ["BREVO_API_KEY"]
 LISTS = json.loads(os.environ.get("BREVO_LISTS") or "{}")
 TEST = (os.environ.get("TEST_EMAIL") or "").strip()
-SENDER = {"name": "TeeOrTee Jobs", "email": "social@teeortee.com"}
+SENDER = {"name": "TeeOrTee Jobs", "email": "noreply@teeortee.com"}
+REPLY_TO = {"email": "social@teeortee.com", "name": "TeeOrTee"}
 E = html.escape
 TODAY = datetime.date.today()
 CUT = (TODAY - datetime.timedelta(days=7)).isoformat()
@@ -70,7 +71,7 @@ def main():
         c = api("POST", "/emailCampaigns", {
             "name": f"Weekly {rname} jobs {TODAY}", "subject": f"{len(jobs)} new {rname} jobs this week",
             "previewText": "Fresh roles across the USA, UK, Europe, Canada and Australia",
-            "sender": SENDER, "htmlContent": email_html(rid, rname, jobs),
+            "sender": SENDER, "replyTo": REPLY_TO["email"], "htmlContent": email_html(rid, rname, jobs),
             "recipients": {"listIds": [int(lid)]}, "inlineImageActivation": False})
         if TEST:
             api("POST", f"/emailCampaigns/{c['id']}/sendTest", {"emailTo": [TEST]})

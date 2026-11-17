@@ -1,7 +1,7 @@
 """Build the static jobs.teeortee.com site from data/jobs.json into site/."""
 import json, os, sys, html, datetime, shutil
 sys.path.insert(0, os.path.dirname(__file__))
-from config import ROLES, REGIONS, TEES, ROLE_TEES, SHOP, SITE
+from config import ROLES, REGIONS, TEES, ROLE_TEES, SHOP, SITE, EXCLUDE
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "site")
@@ -17,7 +17,8 @@ UTM = "utm_source=jobs.teeortee.com&utm_medium=referral&utm_campaign=jobs"
 
 def recent(days):
     cut = (TODAY - datetime.timedelta(days=days)).isoformat()
-    return sorted([j for j in DB.values() if j.get("first_seen", "") >= cut],
+    return sorted([j for j in DB.values() if j.get("first_seen", "") >= cut
+                   and not any(x in " " + j["title"].lower() + " " for x in EXCLUDE)],
                   key=lambda j: (j.get("first_seen", ""), j.get("posted", "")), reverse=True)
 
 
@@ -64,10 +65,26 @@ def page(path, title, desc, body):
     open(full, "w").write(doc)
 
 
+ROLE_RANK = {r[0]: i for i, r in enumerate(ROLES)}
+
+
+def pick(js, per, per_company=3):
+    """Project roles first (product roles last), at most 3 jobs per company, then fill."""
+    js = sorted(js, key=lambda j: ROLE_RANK.get(j["role"], 99))
+    out, seen, rest = [], {}, []
+    for j in js:
+        c = j["company"].lower()
+        if seen.get(c, 0) < per_company:
+            out.append(j); seen[c] = seen.get(c, 0) + 1
+        else:
+            rest.append(j)
+    return (out + rest)[:per]
+
+
 def grouped(jobs, by, names, order, per, tee_for):
     parts, i = [], 0
     for key in order:
-        js = [j for j in jobs if j[by] == key][:per]
+        js = pick([j for j in jobs if j[by] == key], per)
         if not js:
             continue
         parts.append(f'<section id="{key}"><h2>{E(names[key])} <small>{len(js)}</small></h2><ol>{"".join(job_li(j) for j in js)}</ol></section>')

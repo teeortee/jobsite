@@ -12,7 +12,7 @@ ROLES = [
     ("project-coordinator", "Project Coordinator", ["project coordinator", "project co-ordinator", "project administrator", "project analyst"]),
     ("product-manager", "Product Manager / Owner", ["product manager", "product owner"]),
 ]
-EXCLUDE = ["intern ", "internship", "unpaid", "commission only"]
+EXCLUDE = ["intern ", "internship", "unpaid", "commission only", "recruiting", "recruiter", "talent acquisition", "media planner", "event planner", "financial planner", "meal planner"]
 
 # Regions: id, label, Adzuna country codes, location keywords for keyless sources
 REGIONS = [
