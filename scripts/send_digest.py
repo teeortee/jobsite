@@ -52,7 +52,7 @@ def email_html(rid, rname, jobs):
 <p style="font-size:15px;margin:0">Collected from public job boards and company career pages. Each link takes you to the original listing.</p>
 {"".join(blocks)}
 <p style="margin:20px 0"><a href="{SITE}/role/{rid}/?{UTM}" style="background:#14214a;color:#fff;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:700">See all {E(rname)} jobs</a></p>
-<div style="background:#14214a;border-radius:12px;padding:16px;text-align:center;color:#fff"><p style="font-weight:700;font-size:17px;margin:0 0 10px">Made for {E(rname)}s</p>
+<div style="background:#14214a;border-radius:12px;padding:16px;text-align:center;color:#fff"><p style="font-weight:700;font-size:17px;margin:0 0 10px">Funny tees for {E(rname)} roles</p>
 <table width="100%"><tr>{tees}</tr></table>
 <p style="margin:12px 0 0"><a href="{SHOP}/collections/all?{UTM}" style="background:#e8662c;color:#fff;padding:11px 22px;border-radius:999px;text-decoration:none;font-weight:700">Shop teeortee.com</a></p></div>
 <p style="font-size:12px;color:#6b6f80;margin-top:20px">You get this because you signed up for {E(rname)} job alerts at jobs.teeortee.com. TeeOrTee is not affiliated with the employers or job boards listed; always apply on the source site.<br><a href="{{{{ unsubscribe }}}}" style="color:#6b6f80">Unsubscribe</a></p>

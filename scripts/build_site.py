@@ -29,10 +29,54 @@ def tee_strip(keys, heading="Between interviews: funny tees for project people")
     return f'<aside class="strip"><p class="strip-h">{E(heading)}</p><div class="cards">{cards}</div><a class="btn" href="{SHOP}/collections/all?{UTM}">Shop all tees at teeortee.com</a></aside>'
 
 
+KEYWORD_TEES = [  # title keywords -> most relevant tee
+    (("risk", "compliance", "security", "audit", "grc"), "risk"),
+    (("schedul", "planner", "planning", "critical path"), "cp"),
+    (("controls", "cost", "baseline"), "baseline"),
+    (("scrum", "agile", "delivery", "release"), "roadmap"),
+    (("program", "portfolio", "transformation"), "deps"),
+    (("pmo", "governance", "operations"), "meeting"),
+    (("product",), "roadmap"),
+    (("construction", "infrastructure", "data center", "engineering"), "scope"),
+    (("change",), "cr"),
+]
+
+
+def tees_for(j):
+    """3 tees most relevant to this job: keyword match first, then the role's defaults."""
+    t = j["title"].lower()
+    picks = [k for kws, k in KEYWORD_TEES if any(w in t for w in kws)]
+    out = []
+    for k in picks + ROLE_TEES[j["role"]] + ["pm", "scope", "cr"]:
+        if k not in out:
+            out.append(k)
+    return out[:3]
+
+
 def job_li(j):
-    return (f'<li><a href="{E(j["url"])}" target="_blank" rel="nofollow noopener"><strong>{E(j["title"])}</strong></a>'
+    return (f'<li><a href="/job/{E(j["id"])}/"><strong>{E(j["title"])}</strong></a>'
             f'<span>{E(j["company"])} · {E(j["location"])}</span>'
             f'<em>{E(ROLE_NAME[j["role"]])} · Source: {E(j["source"])} · Added {E(j["first_seen"])}</em></li>')
+
+
+def job_page(j, similar):
+    rname = ROLE_NAME[j["role"]]
+    gname = REGION_NAME[j["region"]]
+    sim = "".join(job_li(x) for x in similar)
+    body = (f'<p class="crumbs"><a href="/">Jobs today</a> › <a href="/role/{j["role"]}/">{E(rname)}</a> › '
+            f'<a href="/region/{j["region"]}/">{E(gname)}</a></p>'
+            f'<article class="job"><p class="eyebrow">{E(rname)} · {E(gname)}</p><h1>{E(j["title"])}</h1>'
+            f'<dl class="meta"><dt>Company</dt><dd>{E(j["company"])}</dd><dt>Location</dt><dd>{E(j["location"])}</dd>'
+            f'<dt>Role type</dt><dd>{E(rname)}</dd><dt>Region</dt><dd>{E(gname)}</dd>'
+            f'<dt>Added</dt><dd>{E(j["first_seen"])}</dd><dt>Source</dt><dd>{E(j["source"])}</dd></dl>'
+            f'<a class="btn apply" href="{E(j["url"])}" target="_blank" rel="nofollow noopener">Apply on {E(j["source"])} ↗</a>'
+            f'<p class="note">You will apply on the original listing. TeeOrTee does not handle applications and is not affiliated with {E(j["company"])}.</p></article>'
+            + tee_strip(tees_for(j), f"Funny tees for {rname} roles")
+            + signup()
+            + (f'<section><h2>Similar jobs</h2><ol>{sim}</ol></section>' if sim else ""))
+    page(f"/job/{j['id']}/", f"{j['title']} at {j['company']} ({j['location']}) | TeeOrTee Jobs",
+         f"{j['title']} at {j['company']}, {j['location']}. {rname} role in {gname}. Apply on the original listing via TeeOrTee Jobs.",
+         body, noindex=True)
 
 
 def nav():
@@ -47,10 +91,11 @@ def signup():
             f'<a class="btn" href="{E(SIGNUP)}">Sign up for job alerts</a></div>')
 
 
-def page(path, title, desc, body):
+def page(path, title, desc, body, noindex=False):
     canon = SITE + path
+    robots = '<meta name="robots" content="noindex,follow">' if noindex else ""
     doc = f'''<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">{robots}
 <title>{E(title)}</title><meta name="description" content="{E(desc)}">
 <link rel="canonical" href="{canon}"><meta property="og:title" content="{E(title)}">
 <meta property="og:description" content="{E(desc)}"><meta property="og:url" content="{canon}">
@@ -117,7 +162,7 @@ def main():
         body = (f'<p class="eyebrow">Last 7 days · updated {E(NICE)}</p><h1>{E(rname)} jobs</h1>'
                 f'<p class="lede">{len(js)} new {E(rname)} roles this week across the USA, UK, Europe, Canada and Australia.</p>'
                 + nav() + signup() + grouped(js, "region", REGION_NAME, regs, 40, lambda k, rid=rid: ROLE_TEES[rid])
-                + tee_strip(ROLE_TEES[rid], f"Made for {rname}s"))
+                + tee_strip(ROLE_TEES[rid], f"Funny tees for {rname} roles"))
         page(f"/role/{rid}/", f"{rname} Jobs – USA, UK, Europe, Canada | TeeOrTee Jobs",
              f"Latest {rname} jobs posted this week, updated daily, with links to the original listings.", body)
     for gid, gname, _, _ in REGIONS:
@@ -127,6 +172,10 @@ def main():
                 + nav() + signup() + grouped(js, "role", ROLE_NAME, rls, 30, lambda k: ROLE_TEES[k]))
         page(f"/region/{gid}/", f"Project Manager Jobs in {gname} | TeeOrTee Jobs",
              f"New project manager, programme manager, PMO and scrum jobs in {gname} this week, updated daily.", body)
+    # one details page per job this week, with an Apply button to the source and matching tees
+    for j in week:
+        similar = [x for x in week if x["role"] == j["role"] and x["region"] == j["region"] and x["id"] != j["id"]][:6]
+        job_page(j, similar)
     # weekly feed for the email digest
     json.dump(week, open(os.path.join(OUT, "week.json"), "w"), ensure_ascii=False)
     urls = ["/"] + [f"/role/{r[0]}/" for r in ROLES] + [f"/region/{r[0]}/" for r in REGIONS]
