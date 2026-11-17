@@ -59,9 +59,7 @@ def post_text(g, jobs, tee):
              "Fresh project manager, programme, PMO, scrum and planning roles from company career pages and job boards. Apply on the original listing:", ""]
     for i, j in enumerate(jobs):
         lines += [f"{NUMS[i]} {j['title']} at {j['company']} ({short_loc(j)})", f"👉 {j['url']}", ""]
-    lines += [f"More jobs, updated daily: {SITE}{g['hub']}"]
-    if SIGNUP:
-        lines += [f"Weekly job alerts for your role: {SIGNUP}"]
+    lines += [f"More jobs (updated daily) and free weekly alerts for your role: {SITE}{g['hub']}"]
     lines += ["", f"👕 Between interviews: {TEES[tee][0]} tee for project pros at {SHOP}",
               "", "Know someone looking? Share this post 🔁", "", g["tags"]]
     return "\n".join(lines)
