@@ -233,7 +233,7 @@ def grouped(jobs, by, names, order, per, tee_for):
 def main():
     if os.path.exists(OUT):
         for f in os.listdir(OUT):
-            if f not in ("assets", "CNAME"):
+            if f not in ("assets", "CNAME", "social"):
                 p = os.path.join(OUT, f)
                 shutil.rmtree(p) if os.path.isdir(p) else os.remove(p)
     today = recent(1) or recent(3)
