@@ -2,7 +2,7 @@
 SHOP = "https://teeortee.com"
 SITE = "https://jobs.teeortee.com"
 # Search engine site-verification tokens for jobs.teeortee.com (meta tag content values)
-VERIFY = {"google-site-verification": "", "msvalidate.01": ""}
+VERIFY = {"google-site-verification": "XKkijHafH9AeDa1pKh3mlcms-hjYEXeJ_w00_16mGVk", "msvalidate.01": ""}
 INDEXNOW_KEY = "7f3c2a9e5b1d4e8fa6c0b2d4e6f8a1c3"
 
 # Role families: (id, label, keywords matched against lower-case title)
