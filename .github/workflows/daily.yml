@@ -1,0 +1,37 @@
+name: Update jobs daily
+on:
+  schedule:
+    - cron: "17 5 * * *"   # 05:17 UTC = 08:17 Riyadh, 00:17 New York, 05:17 London
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency: { group: pages, cancel-in-progress: false }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Fetch jobs
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+        run: python scripts/fetch_jobs.py
+      - name: Build site
+        env:
+          SIGNUP_URL: ${{ vars.SIGNUP_URL }}
+        run: python scripts/build_site.py
+      - name: Save job history
+        run: |
+          git config user.name "teeortee-bot"
+          git config user.email "social@teeortee.com"
+          git add data/jobs.json
+          git commit -m "Jobs update $(date -u +%F)" || echo "no changes"
+          git push
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site }
+      - uses: actions/deploy-pages@v4

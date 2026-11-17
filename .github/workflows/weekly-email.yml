@@ -1,0 +1,22 @@
+name: Weekly job alert emails
+on:
+  schedule:
+    - cron: "7 13 * * 1"   # Mondays 13:07 UTC = 4:07 PM Riyadh, 8:07 AM New York, 1:07 PM London
+  workflow_dispatch:
+    inputs:
+      test_email:
+        description: "Send only a test to this address"
+        required: false
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Send digests
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_LISTS: ${{ vars.BREVO_LISTS }}
+          TEST_EMAIL: ${{ github.event.inputs.test_email }}
+        run: python scripts/send_digest.py
