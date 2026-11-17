@@ -128,14 +128,15 @@ def feed(key, g):
 
 
 def pinterest_feed():
-    """One feed with both regions for Pinterest auto-publish (title <= 100, description <= 500 chars)."""
+    """Pinterest feed, USA & Canada post only (one pin a day) (title <= 100, description <= 500 chars)."""
     items = []
-    for f in sorted(glob.glob(os.path.join(OUT, "20*.json")), reverse=True)[:20]:
+    for f in sorted(glob.glob(os.path.join(OUT, "20*-americas.json")), reverse=True)[:10]:  # 1 pin/day keeps Zapier free tier
         p = json.load(open(f))
         g = GROUPS[p["id"].split("-", 3)[3]]
         jobs = p.get("jobs") or []
         sample = "; ".join(jobs[:3])
-        desc = (f"{p.get('count', len(jobs))} new project manager, programme, PMO and scrum master jobs in {g['name']} today"
+        n = p.get("count")
+        desc = ((f"{n} new" if n else "New") + f" project manager, programme, PMO and scrum master jobs in {g['name']} today"
                 + (f", including {sample}" if sample else "") + ". See all jobs and apply on the original listings at jobs.teeortee.com. "
                 "Funny t-shirts for project professionals at teeortee.com. #projectmanagement #jobs #projectmanager")[:500]
         link = f"{p['link']}?utm_source=pinterest&utm_medium=social&utm_campaign=daily-jobs"
