@@ -59,7 +59,17 @@ def email_html(rid, rname, jobs):
 </td></tr></table></div>'''
 
 
+def find_lists():
+    """Map role id -> Brevo list id by list name 'Jobs - <role name>' (no manual config needed)."""
+    got = api("GET", "/contacts/lists?limit=50").get("lists", [])
+    by_name = {l["name"]: l["id"] for l in got}
+    return {rid: by_name.get(f"Jobs - {rname}") for rid, rname, _ in ROLES}
+
+
 def main():
+    global LISTS
+    if not LISTS:
+        LISTS = find_lists()
     week = [j for j in DB.values() if j.get("first_seen", "") >= CUT]
     week.sort(key=lambda j: j.get("first_seen", ""), reverse=True)
     for rid, rname, _ in ROLES:
